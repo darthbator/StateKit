@@ -4,11 +4,9 @@ using System.Collections;
 using System.Collections.Generic;
 
 
-namespace Prime31.StateKit
-{
 	/// <summary>
 	/// Mecanim specific StateKit state machine. Note that there are some differences between a normal StateKit state machine:
-	/// - the SKMecanimStateMachine will not call a states update method until Mecanim fully transitions into that state
+	/// - the SKMecanimStateMachine will not call a states Update method until Mecanim fully transitions into that state
 	/// </summary>
 	public sealed class SKMecanimStateMachine<T>
 	{
@@ -33,18 +31,18 @@ namespace Prime31.StateKit
 			_context = context;
 
 			// setup our initial state
-			addState( initialState );
+			AddState( initialState );
 			_currentState = initialState;
-			_currentState.begin();
+			_currentState.Begin();
 		}
 
 
 		/// <summary>
 		/// adds the state to the machine
 		/// </summary>
-		public void addState( SKMecanimState<T> state )
+		public void AddState( SKMecanimState<T> state )
 		{
-			state.setMachineAndContext( this, _context );
+			state.SetMachineAndContext( this, _context );
 			_states[state.GetType()] = state;
 		}
 
@@ -52,19 +50,19 @@ namespace Prime31.StateKit
 		/// <summary>
 		/// ticks the state machine with the provided delta time
 		/// </summary>
-		public void update( float deltaTime )
+		public void Update( float deltaTime )
 		{
 			var currentStateInfo = animator.GetCurrentAnimatorStateInfo( 0 );
 
-			// only call the states update method if we are in that state or if it's mecanimStateHash is 0 meaning it doesn't want us to limit the calls
+			// only call the states Update method if we are in that state or if it's mecanimStateHash is 0 meaning it doesn't want us to limit the calls
 			if( _currentState.mecanimStateHash == 0 || currentStateInfo.fullPathHash == _currentState.mecanimStateHash )
 			{
 				var tempState = _currentState;
-				_currentState.reason();
+				_currentState.Reason();
 
 				// we might have changed state in reason so we make sure we are still on the same state here
 				if( tempState == _currentState )
-					_currentState.update( deltaTime, currentStateInfo );
+					_currentState.Update( deltaTime, currentStateInfo );
 			}
 		}
 
@@ -72,7 +70,7 @@ namespace Prime31.StateKit
 		/// <summary>
 		/// changes the current state
 		/// </summary>
-		public R changeState<R>() where R : SKMecanimState<T>
+		public R ChangeState<R>() where R : SKMecanimState<T>
 		{
 			// avoid changing to the same state
 			var newType = typeof( R );
@@ -83,18 +81,18 @@ namespace Prime31.StateKit
 			// do a sanity check while in the editor to ensure we have the given state in our state list
 			if( !_states.ContainsKey( newType ) )
 			{
-				var error = GetType() + ": state " + newType + " does not exist. Did you forget to add it by calling addState?";
+				var error = GetType() + ": state " + newType + " does not exist. Did you forget to add it by calling AddState?";
 				Debug.LogError( error );
 				throw new Exception( error );
 			}
 #endif
 
 			// end the previous state
-			_currentState.end();
+			_currentState.End();
 
 			// swap states and call begin
 			_currentState = _states[newType];
-			_currentState.begin();
+			_currentState.Begin();
 
 			// fire the changed event if we have a listener
 			if( onStateChanged != null )
@@ -104,4 +102,3 @@ namespace Prime31.StateKit
 		}
 
 	}
-}
